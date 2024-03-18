@@ -38,10 +38,25 @@ let loop = function () {
 	window.requestAnimationFrame(loop);
 }
 
+let portal = function(val, min, max) {
+	if(val < min) val = max + val;
+	if(val > max) val = max - val;
+
+	return val;
+}
+
+let box = new Source2D.ShapeBox(100, 100, 50, 50);
+let shape = new Source2D.Shape(200, 200, [[0,0], [20,20], [0,20], [0,0]], 0);
+
 let update = function () {
 	layout.update();
+
+	box.moveAtAngle(1);
+	box.angle = portal(box.angle + 1, 0, 360);
 }
 
 let render = function () {
 	layout.render(ctx);
+	box.render(ctx);
+	shape.render(ctx);
 }
