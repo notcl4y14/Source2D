@@ -12,19 +12,119 @@ let initGraphics = function () {
 	ctx = canvas.getContext("2d");
 }
 
-let load = function () {}
+let load = function () {
+	layout.addLayer(0, "main");
+	layout.getLayer("main").objects.push(
+		new Source2D.Object(
+			assets.controls,
+			new Source2D.ShapeBox(300, 10, assets.controls.width, assets.controls.height)
+		)
+	);
+	layout.getLayer("main").objects.push( new Rectangle(10, 10, 50, 50) );
+}
 
 // ==================================
 
-let layout = new Source2D.Layout();
-layout.addLayer(0, "main");
-layout.getLayer("main").objects.push({
-	update: function() {},
-	render: function(ctx) {
-		ctx.fillStyle = "white";
-		ctx.fillRect(10, 10, 50, 50);
+let CreateCirclePolygon = function (radius) {
+	let shape = [];
+
+	let x = -radius;
+	let y = -radius;
+
+	for (let i = 0; i < 2 * Math.PI; i += 1) {
+		x += radius * Math.cos(i);
+		y += radius * Math.sin(i);
+		console.log(x, y);
+
+		shape.push([x, y]);
 	}
-})
+
+	return shape;
+}
+
+// ==================================
+
+let Rectangle = class extends Source2D.Object {
+	constructor (x, y, width, height, angle = 0, pivot = ["center", "center"]) {
+		super();
+		this.shape = new Source2D.ShapeBox(x, y, width, height, angle, pivot);
+	}
+	
+	update () {
+		let left = input.isKeyDown("ArrowLeft");
+		let right = input.isKeyDown("ArrowRight");
+		let up = input.isKeyDown("ArrowUp");
+		let down = input.isKeyDown("ArrowDown");
+
+		let forward = input.isKeyDown("KeyW");
+		let backward = input.isKeyDown("KeyS");
+		let rotate_left = input.isKeyDown("KeyA");
+		let rotate_right = input.isKeyDown("KeyD");
+
+		let dirX = (right - left);
+		let dirY = (down - up);
+
+		let dirForward = (forward - backward);
+		let dirAngle = (rotate_right - rotate_left);
+
+		this.x += dirX;
+		this.y += dirY;
+
+		this.angle += dirAngle;
+		this.shape.moveAtAngle(dirForward);
+
+		// this.shape.width = Math.sin(Date.now());
+	}
+
+	render (ctx) {
+		let translateX = -this.shape.Pivot()[0];
+		let translateY = -this.shape.Pivot()[1];
+
+		let pivotX = this.x + this.shape.Pivot()[0];
+		let pivotY = this.y + this.shape.Pivot()[1];
+
+		let x = pivotX + translateX;
+		let y = pivotY + translateY;
+
+		ctx.strokeStyle = "white";
+		ctx.save();
+
+		ctx.translate(x, y);
+		ctx.rotate(ToRadians(this.angle));
+
+		ctx.fillStyle = "black";
+		ctx.fillRect(translateX, translateY, this.shape.width, this.shape.height);
+
+		ctx.restore();
+
+		this.shape.render(ctx);
+	}
+}
+
+let Circle = class extends Source2D.Object {
+	constructor (x, y, radius = 0, angle = 0, pivot = ["center", "center"]) {
+		super();
+		this.shape = new Source2D.Shape(x, y, CreateCirclePolygon(radius), angle, pivot);
+	}
+	
+	update () {
+		// this.shape.width = Math.sin(Date.now());
+	}
+
+	render (ctx) {
+		this.shape.render(ctx);
+	}
+}
+
+// ==================================
+
+let assets = {
+	controls: new Image()
+};
+assets.controls.src = "controls.png";
+let input = new Source2D.Input();
+let layout = new Source2D.Layout();
+// layout.getLayer("main").objects.push( new Circle(200, 100, 40, 0, [0, 0]) );
 
 // ==================================
 
@@ -38,25 +138,10 @@ let loop = function () {
 	window.requestAnimationFrame(loop);
 }
 
-let portal = function(val, min, max) {
-	if(val < min) val = max + val;
-	if(val > max) val = max - val;
-
-	return val;
-}
-
-let box = new Source2D.ShapeBox(100, 100, 50, 50);
-let shape = new Source2D.Shape(200, 200, [[0,0], [20,20], [0,20], [0,0]], 0);
-
 let update = function () {
 	layout.update();
-
-	box.moveAtAngle(1);
-	box.angle = portal(box.angle + 1, 0, 360);
 }
 
 let render = function () {
 	layout.render(ctx);
-	box.render(ctx);
-	shape.render(ctx);
 }
