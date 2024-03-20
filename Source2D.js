@@ -9,6 +9,61 @@ let Position = function (x, y) {
 
 let Source2D = {};
 
+Source2D.loadImage = function (src) {
+	let img = new Image();
+	img.src = src;
+
+	return img;
+}
+
+Source2D.Sprite = class {
+	constructor (frames = [], interval = 2, loop = false) {
+		this.frame = 0;
+		this.frames = frames;
+		this.interval = interval;
+		this.loop = loop;
+		this.paused = false;
+
+		this.timer = 0;
+	}
+
+	getFrameImage (frame = this.frame) {
+		// if (frame) {
+			// return this.frames[frame];
+		// }
+		// console.log(this.frames[this.frame], this.frame);
+		return this.frames[this.frame];
+	}
+
+	update () {
+		if (this.paused) return;
+		this.timer += 1;
+
+		if (this.timer > this.interval) {
+			this.timer = 0;
+			this.frame += 1;
+		}
+
+		if (this.frame > this.frames.length) {
+			// this.frame -= 1;
+			this.frame = this.frames.length - 1;
+			this.paused = true;
+
+			if (this.loop) {
+				this.frame = 0;
+				this.paused = false;
+			}
+		}
+	}
+	
+	render (ctx, x, y) {
+		let img = this.getFrameImage();
+		ctx.fillStyle = "white";
+		if (img) ctx.drawImage(img, x, y);
+		else ctx.fillText("Invalid Image Data", x, y);
+	}
+}
+
 Source2D.Input = class {
 	constructor () {
 		this.keys = {};
@@ -353,13 +408,15 @@ Source2D.Object = class {
 
 	// ========================================
 
-	update () {}
-
-	render () {
-		this.renderSprite();
+	update () {
+		this.spr.update();
 	}
 
-	renderSprite () {
+	render (ctx) {
+		this.renderSprite(ctx);
+	}
+
+	renderSprite (ctx) {
 		
 		// let translateX = -this.shape.Pivot()[0];
 		// let translateY = -this.shape.Pivot()[1];
@@ -377,8 +434,7 @@ Source2D.Object = class {
 		// else ctx.fillText("Invalid Image Data", translateX, translateY);
 
 		// ctx.restore();
-		
-		if (this.spr) ctx.drawImage(this.spr, this.x, this.y);
-		else ctx.fillText("Invalid Image Data", this.x, this.y);
+
+		if (this.spr) this.spr.render(ctx, this.x, this.y);
 	}
 }

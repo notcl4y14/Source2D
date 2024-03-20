@@ -16,7 +16,7 @@ let load = function () {
 	layout.addLayer(0, "main");
 	layout.getLayer("main").objects.push(
 		new Source2D.Object(
-			assets.controls,
+			sprites.controls,
 			new Source2D.ShapeBox(300, 10, assets.controls.width, assets.controls.height)
 		)
 	);
@@ -119,9 +119,13 @@ let Circle = class extends Source2D.Object {
 // ==================================
 
 let assets = {
-	controls: new Image()
+	controls: Source2D.loadImage("controls.png")
 };
-assets.controls.src = "controls.png";
+
+let sprites = {
+	controls: new Source2D.Sprite([assets.controls])
+};
+// assets.controls.src = "controls.png";
 let input = new Source2D.Input();
 let layout = new Source2D.Layout();
 // layout.getLayer("main").objects.push( new Circle(200, 100, 40, 0, [0, 0]) );
