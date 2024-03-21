@@ -12,17 +12,22 @@ let Source2D = {};
 Source2D.loadImage = function (src) {
 	let img = new Image();
 	img.src = src;
+	// img.loaded = false;
+	
+	// img.onload = function() {
+		// this.loaded = true;
+	// }
 
 	return img;
 }
 
 Source2D.Sprite = class {
-	constructor (frames = [], interval = 2, loop = false) {
+	constructor (frames = [], interval = 2, loop = false, paused = false) {
 		this.frame = 0;
 		this.frames = frames;
 		this.interval = interval;
 		this.loop = loop;
-		this.paused = false;
+		this.paused = paused;
 
 		this.timer = 0;
 	}
@@ -35,6 +40,7 @@ Source2D.Sprite = class {
 		return this.frames[this.frame];
 	}
 
+	// TODO: Fix this (frame goes to the limit of the frames)
 	update () {
 		if (this.paused) return;
 		this.timer += 1;
@@ -59,7 +65,7 @@ Source2D.Sprite = class {
 	render (ctx, x, y) {
 		let img = this.getFrameImage();
 		ctx.fillStyle = "white";
-		if (img) ctx.drawImage(img, x, y);
+		if (img.complete) ctx.drawImage(img, x, y);
 		else ctx.fillText("Invalid Image Data", x, y);
 	}
 }

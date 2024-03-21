@@ -13,6 +13,13 @@ let initGraphics = function () {
 }
 
 let load = function () {
+	assets = {
+		controls: Source2D.loadImage("controls.png")
+	};
+	sprites = {
+		controls: new Source2D.Sprite([assets.controls], 2, true, true)
+	};
+	
 	layout.addLayer(0, "main");
 	layout.getLayer("main").objects.push(
 		new Source2D.Object(
@@ -118,17 +125,11 @@ let Circle = class extends Source2D.Object {
 
 // ==================================
 
-let assets = {
-	controls: Source2D.loadImage("controls.png")
-};
+let assets = {};
+let sprites = {};
 
-let sprites = {
-	controls: new Source2D.Sprite([assets.controls])
-};
-// assets.controls.src = "controls.png";
 let input = new Source2D.Input();
 let layout = new Source2D.Layout();
-// layout.getLayer("main").objects.push( new Circle(200, 100, 40, 0, [0, 0]) );
 
 // ==================================
 
@@ -147,5 +148,14 @@ let update = function () {
 }
 
 let render = function () {
+	if (assets.controls.complete == false) {	
+		ctx.fillStyle = "black";
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+		ctx.fillStyle = "white";
+		ctx.fillText("Loading...", 0, 10);
+		return;
+	}
+
 	layout.render(ctx);
 }
