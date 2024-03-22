@@ -38,10 +38,20 @@ let load = function () {
 	layout.getLayer("main").objects.push( new Rectangle(10, 10, 50, 50) );
 
 	layout.getLayer("main").objects[0].update = function () {
+
 		let sin = Math.sin,
-		    floor = Math.floor,
 			now = performance.now();
+		
+		// Sprite
 		this.spr.update();
+
+		// Physics
+		this.shape.applyGravity(0, 0.25);
+		this.shape.applyVelocity();
+
+		if (this.y >= 400) this.shape.vel.y = -13.5;
+
+		// Angle
 		this.angle = sin( now / 1000 ) * 10;
 	}
 }

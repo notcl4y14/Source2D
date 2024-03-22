@@ -263,6 +263,8 @@ Source2D.Shape = class {
 		this.height = height;
 		this.angle = angle;
 		this.pivot = pivot;
+
+		this.vel = {x: 0, y: 0, angle: 0};
 	}
 
 	// ========================================
@@ -276,6 +278,35 @@ Source2D.Shape = class {
 	}
 
 	// ========================================
+
+	applyVelocity () {
+		this.x += this.vel.x;
+		this.y += this.vel.y;
+		this.angle += this.vel.angle;
+	}
+
+	applyGravity (x, y) {
+		this.vel.x += x;
+		this.vel.y += y;
+	}
+
+	addVelocity (x, y, angle = 0) {
+		this.vel.x += x;
+		this.vel.y += y;
+		this.vel.angle += angle;
+	}
+
+	addFriction (x, y, angle = 0) {
+		this.vel.x -= x;
+		this.vel.y -= y;
+		this.vel.angle -= angle;
+	}
+	
+	stopVelocity (x = true, y = true, angle = false) {
+		if (x) this.vel.x = 0;
+		if (y) this.vel.y = 0;
+		if (angle) this.vel.angle = 0;
+	}
 
 	// ========================================
 	
