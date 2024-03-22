@@ -12,12 +12,6 @@ let Source2D = {};
 Source2D.loadImage = function (src) {
 	let img = new Image();
 	img.src = src;
-	// img.loaded = false;
-	
-	// img.onload = function() {
-		// this.loaded = true;
-	// }
-
 	return img;
 }
 
@@ -33,10 +27,6 @@ Source2D.Sprite = class {
 	}
 
 	getFrameImage (frame = this.frame) {
-		// if (frame) {
-			// return this.frames[frame];
-		// }
-		// console.log(this.frames[this.frame], this.frame);
 		return this.frames[this.frame];
 	}
 
@@ -50,8 +40,7 @@ Source2D.Sprite = class {
 			this.frame += 1;
 		}
 
-		if (this.frame > this.frames.length) {
-			// this.frame -= 1;
+		if (this.frame >= this.frames.length) {
 			this.frame = this.frames.length - 1;
 			this.paused = true;
 
@@ -64,9 +53,107 @@ Source2D.Sprite = class {
 	
 	render (ctx, x, y) {
 		let img = this.getFrameImage();
-		ctx.fillStyle = "white";
+		// ctx.fillStyle = "white";
 		if (img.complete) ctx.drawImage(img, x, y);
 		else ctx.fillText("Invalid Image Data", x, y);
+	}
+}
+
+Source2D.Assets = class {
+	constructor () {
+		this.gfx = {};
+		this.sfx = {};
+		this.mus = {};
+		this.spr = {};
+	}
+
+	// ========================================
+
+	get isLoaded () {
+		return this.gfx_isLoaded &&
+		       this.sfx_isLoaded &&
+			   this.mus_isLoaded;
+	}
+	
+	get gfx_isLoaded () {
+		for (let [_, gfx] of Object.entries(this.gfx)) {
+			if (!gfx.complete) return false;
+		}
+
+		return true;
+	}
+	
+	get sfx_isLoaded () {
+		for (let [_, sfx] of Object.entries(this.sfx)) {
+			if (!sfx.complete) return false;
+		}
+		
+		return true;
+	}
+	
+	get mus_isLoaded () {
+		for (let [_, mus] of Object.entries(this.mus)) {
+			if (!mus.complete) return false;
+		}
+		
+		return true;
+	}
+
+	// ========================================
+
+	unloadGFX (gfx) {
+		delete this.gfx[gfx];
+	}
+	unloadSFX (sfx) {
+		delete this.sfx[sfx];
+	}
+	unloadMusic (mus) {
+		delete this.mus[mus];
+	}
+
+	// ========================================
+
+	loadGFX (name, img) {
+		let mode = typeof(img) == "string";
+		if (mode === true) img = Source2D.loadImage(img);
+
+		this.gfx[name] = img;
+	}
+
+	loadSFX (name, sfx) {
+		let mode = typeof(sfx) == "string";
+		if (mode == true) sfx = new Audio(sfx);
+
+		this.sfx[name] = sfx;
+	}
+
+	loadMusic (name, mus) {
+		let mode = typeof(mus) == "string";
+		if (mode == true) mus = new Audio(mus);
+
+		this.mus[name] = mus;
+	}
+
+	loadSprite (name, spr) {
+		this.spr[name] = spr;
+	}
+
+	// ========================================
+
+	getGFX (gfx) {
+		return this.gfx[gfx];
+	}
+
+	getSFX (sfx) {
+		return this.sfx[sfx];
+	}
+
+	getMusic (mus) {
+		return this.mus[mus];
+	}
+
+	getSprite (spr) {
+		return this.spr[spr];
 	}
 }
 

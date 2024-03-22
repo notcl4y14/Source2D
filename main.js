@@ -13,18 +13,26 @@ let initGraphics = function () {
 }
 
 let load = function () {
-	assets = {
-		controls: Source2D.loadImage("controls.png")
-	};
+	assets = new Source2D.Assets();
+	
+	assets.loadGFX("controls_1", Source2D.loadImage("controls.png"));
+	assets.loadGFX("controls_2", Source2D.loadImage("controls-1.png"));
+	assets.loadGFX("controls_3", Source2D.loadImage("controls-2.png"));
+	
 	sprites = {
-		controls: new Source2D.Sprite([assets.controls], 2, true, true)
+		controls: new Source2D.Sprite(
+			[
+				assets.getGFX("controls_1"),
+				assets.getGFX("controls_2"),
+				assets.getGFX("controls_3")
+			], 12, true, false)
 	};
 	
 	layout.addLayer(0, "main");
 	layout.getLayer("main").objects.push(
 		new Source2D.Object(
 			sprites.controls,
-			new Source2D.ShapeBox(300, 10, assets.controls.width, assets.controls.height)
+			new Source2D.ShapeBox(300, 10, assets.getGFX("controls_1").width, assets.getGFX("controls_1").height)
 		)
 	);
 	layout.getLayer("main").objects.push( new Rectangle(10, 10, 50, 50) );
@@ -148,7 +156,7 @@ let update = function () {
 }
 
 let render = function () {
-	if (assets.controls.complete == false) {	
+	if (!assets.isLoaded) {	
 		ctx.fillStyle = "black";
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
 
