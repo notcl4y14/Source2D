@@ -32,10 +32,18 @@ let load = function () {
 	layout.getLayer("main").objects.push(
 		new Source2D.Object(
 			sprites.controls,
-			new Source2D.ShapeBox(300, 10, assets.getGFX("controls_1").width, assets.getGFX("controls_1").height)
+			new Source2D.ShapeBox(300, 50, 157, 104, 0, ["center", "center"])
 		)
 	);
 	layout.getLayer("main").objects.push( new Rectangle(10, 10, 50, 50) );
+
+	layout.getLayer("main").objects[0].update = function () {
+		let sin = Math.sin,
+		    floor = Math.floor,
+			now = performance.now();
+		this.spr.update();
+		this.angle = sin( now / 1000 ) * 10;
+	}
 }
 
 // ==================================

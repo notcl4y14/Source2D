@@ -27,7 +27,7 @@ Source2D.Sprite = class {
 	}
 
 	getFrameImage (frame = this.frame) {
-		return this.frames[this.frame];
+		return this.frames[frame];
 	}
 
 	// TODO: Fix this (frame goes to the limit of the frames)
@@ -255,11 +255,12 @@ Source2D.Layer = class {
 }
 
 Source2D.Shape = class {
-	constructor (x, y, polygon = [], angle = 0, pivot = ["center", "center"]) {
+	constructor (x, y, polygon = [], width = 1, height = 1, angle = 0, pivot = ["center", "center"]) {
 		this.x = x;
 		this.y = y;
 		this.polygon = polygon;
-		this.original_polygon = polygon;
+		this.width = width;
+		this.height = height;
 		this.angle = angle;
 		this.pivot = pivot;
 	}
@@ -275,43 +276,6 @@ Source2D.Shape = class {
 	}
 
 	// ========================================
-
-	get width() {
-		let max = 0;
-
-		for (let line of this.polygon) {
-			if (line[0] > max) max = line[0];
-		}
-
-		return max;
-	}
-
-	get height() {
-		let max = 0;
-
-		for (let line of this.polygon) {
-			if (line[1] > max) max = line[1];
-		}
-
-		return max;
-	}
-
-	// ========================================
-
-	// Broken Ig, don't use this
-	// set width (width) {
-	// 	let sides = [];
-
-	// 	for (let i = 0; i < this.polygon.length; i += 1) {
-	// 		let line = this.polygon[i];
-	// 		sides[i] = line[0];
-	// 	}
-
-	// 	for (let i = 0; i < sides.length; i += 1) {
-	// 		if (!sides[i]) continue;
-	// 		this.polygon[i][0] = this.original_polygon[i][0] * width;
-	// 	}
-	// }
 
 	// ========================================
 	
@@ -373,8 +337,8 @@ Source2D.Shape = class {
 			);
 			for (let i = 1; i < this.polygon.length; i += 1) {
 				let line = this.polygon[i];
-				let x = line.x + translateX;
-				let y = line.y + translateY;
+				let x = line.x * this.width + translateX;
+				let y = line.y * this.height + translateY;
 				ctx.lineTo(x, y);
 			}
 			ctx.stroke();
@@ -411,16 +375,13 @@ Source2D.Shape = class {
 
 Source2D.ShapeBox = class extends Source2D.Shape {
 	constructor (x, y, width, height, angle = 0, pivot = ["center", "center"]) {
-		super(x, y);
-
-		// Ok, I think maybe changing these "width"-s and "height"-s with 1's
-		// And then multiply them by custom width and height
-		// TODO: Change this
+		super(x, y, [], width, height);
+		
 		this.polygon = [
 			[0, 0],
-			[width, 0],
-			[width, height],
-			[0, height],
+			[1, 0],
+			[1, 1],
+			[0, 1],
 			[0, 0]
 		];
 		this.angle = angle;
@@ -511,23 +472,21 @@ Source2D.Object = class {
 
 	renderSprite (ctx) {
 		
-		// let translateX = -this.shape.Pivot()[0];
-		// let translateY = -this.shape.Pivot()[1];
+		let translateX = -this.shape.Pivot()[0];
+		let translateY = -this.shape.Pivot()[1];
 
-		// let pivotX = this.x + this.shape.Pivot()[0];
-		// let pivotY = this.y + this.shape.Pivot()[1];
+		let pivotX = this.x + this.shape.Pivot()[0];
+		let pivotY = this.y + this.shape.Pivot()[1];
 
-		// let x = pivotX + translateX;
-		// let y = pivotY + translateY;
+		let x = pivotX + translateX;
+		let y = pivotY + translateY;
 
-		// ctx.translate(x, y);
-		// ctx.rotate(ToRadians(this.angle));
-		
-		// if (this.spr) ctx.drawImage(this.spr, translateX, translateY);
-		// else ctx.fillText("Invalid Image Data", translateX, translateY);
+		ctx.save();
+		ctx.translate(x, y);
+		ctx.rotate(ToRadians(this.angle));
 
-		// ctx.restore();
+		if (this.spr) this.spr.render(ctx, translateX, translateY);
 
-		if (this.spr) this.spr.render(ctx, this.x, this.y);
+		ctx.restore();
 	}
 }
