@@ -2,17 +2,75 @@ let ToRadians = function(degrees) {
 	return degrees * Math.PI / 180;
 }
 
-// AKA Vector2D
-let Position = function (x, y) {
-	return {x, y};
-}
-
 let Source2D = {};
 
+Source2D.Vector = class {
+	constructor (x, y) {
+		this.x = x;
+		this.y = y;
+	};
+
+	// Copy the properties from another vector
+	copy (other) {
+		this.x = other.x;
+		this.y = other.y;
+		return this;
+	}
+
+	// Rotate the vector by 90 degrees
+	perp () {
+		var x = this.x;
+		this.x = this.y;
+		this.y = -x;
+		return this;
+	};
+
+	reverse () {
+		// Nah, ima make it _ * -1
+		// this.x = -this.x;
+		// this.y = -this.y;
+
+		this.x = this.x * -1;
+		this.y = this.y * -1;
+		return this;
+	};
+
+	normalize () {
+		var len = this.len();
+		if (len > 0) {
+		  this.x = this.x / len;
+		  this.y = this.y / len;
+		}
+		return this;
+	};
+	
+	dot (other) {
+		return (this.x * other.x) + (this.y * other.y);
+	};
+
+	// Project onto another vector
+	project (other) {
+		var amt = this.dot(other) / other.len2();
+		this.x = amt * other.x;
+		this.y = amt * other.y;
+		return this;
+	};
+
+	// Get the squared length of the vector
+	len2 () {
+		return this.dot(this);
+	};
+
+	// Get the length of the vector
+	len () {
+		return Math.sqrt(this.len2());
+	};
+}
+
 Source2D.loadImage = function (src) {
-	let img = new Image();
-	img.src = src;
-	return img;
+	let gfx = new Image();
+	gfx.src = src;
+	return gfx;
 }
 
 Source2D.Sprite = class {
@@ -26,7 +84,7 @@ Source2D.Sprite = class {
 		this.timer = 0;
 	}
 
-	getFrameImage (frame = this.frame) {
+	getFrame (frame = this.frame) {
 		return this.frames[frame];
 	}
 
@@ -52,10 +110,13 @@ Source2D.Sprite = class {
 	}
 	
 	render (ctx, x, y) {
-		let img = this.getFrameImage();
-		// ctx.fillStyle = "white";
-		if (img.complete) ctx.drawImage(img, x, y);
-		else ctx.fillText("Invalid Image Data", x, y);
+		let gfx = this.getFrame();
+
+		if (gfx.complete) {
+			ctx.drawImage(gfx, x, y);
+		} else {
+			ctx.fillText("Invalid Image Data", x, y);
+		}
 	}
 }
 
@@ -113,11 +174,11 @@ Source2D.Assets = class {
 
 	// ========================================
 
-	loadGFX (name, img) {
-		let mode = typeof(img) == "string";
-		if (mode === true) img = Source2D.loadImage(img);
+	loadGFX (name, gfx) {
+		let mode = typeof(gfx) == "string";
+		if (mode === true) gfx = Source2D.loadImage(gfx);
 
-		this.gfx[name] = img;
+		this.gfx[name] = gfx;
 	}
 
 	loadSFX (name, sfx) {
@@ -203,6 +264,7 @@ Source2D.Layout = class {
 
 	addLayer (index, name) {
 		this.layers[index] = new Source2D.Layer(name);
+		return this.layers[index];
 	}
 
 	removeLayer (name) {
@@ -255,9 +317,8 @@ Source2D.Layer = class {
 }
 
 Source2D.Shape = class {
-	constructor (x, y, polygon = [], width = 1, height = 1, angle = 0, pivot = ["center", "center"]) {
-		this.x = x;
-		this.y = y;
+	constructor (pos, polygon = [], width = 1, height = 1, angle = 0, pivot = new Source2D.Vector("center", "center")) {
+		this.pos = pos || new Source2D.Vector(0, 0);
 		this.polygon = polygon;
 		this.width = width;
 		this.height = height;
@@ -269,13 +330,29 @@ Source2D.Shape = class {
 
 	// ========================================
 
+	get x () {
+		return this.pos.x;
+	};
+
+	get y () {
+		return this.pos.y;
+	};
+
 	get centerX() {
 		return this.x + this.width / 2;
-	}
+	};
 
 	get centerY() {
 		return this.y + this.height / 2
-	}
+	};
+
+	set x (x) {
+		this.pos.x = x;
+	};
+
+	set y (y) {
+		this.pos.y = y;
+	};
 
 	// ========================================
 
@@ -283,38 +360,38 @@ Source2D.Shape = class {
 		this.x += this.vel.x;
 		this.y += this.vel.y;
 		this.angle += this.vel.angle;
-	}
+	};
 
 	applyGravity (x, y) {
 		this.vel.x += x;
 		this.vel.y += y;
-	}
+	};
 
 	addVelocity (x, y, angle = 0) {
 		this.vel.x += x;
 		this.vel.y += y;
 		this.vel.angle += angle;
-	}
+	};
 
 	addFriction (x, y, angle = 0) {
 		this.vel.x -= x;
 		this.vel.y -= y;
 		this.vel.angle -= angle;
-	}
+	};
 	
 	stopVelocity (x = true, y = true, angle = false) {
 		if (x) this.vel.x = 0;
 		if (y) this.vel.y = 0;
 		if (angle) this.vel.angle = 0;
-	}
+	};
 
 	// ========================================
 	
 	Pivot (pivot = this.pivot) {
-		let x = pivot[0] == "center" ? this.width / 2 : pivot[0];
-		let y = pivot[1] == "center" ? this.height / 2 : pivot[1];
-		return [x, y];
-	}
+		let x = pivot.x == "center" ? this.width / 2 : pivot.x;
+		let y = pivot.y == "center" ? this.height / 2 : pivot.y;
+		return {x, y};
+	};
 
 	// ========================================
 
@@ -329,7 +406,7 @@ Source2D.Shape = class {
 			case "bottom":
 				return this.height;
 		}
-	}
+	};
 
 	// ========================================
 
@@ -341,7 +418,7 @@ Source2D.Shape = class {
 
 		this.x += dirX;
 		this.y += dirY;
-	}
+	};
 
 	// ========================================
 
@@ -378,7 +455,7 @@ Source2D.Shape = class {
 		ctx.restore();
 		
 		if (angle) this.render_angle(ctx, true, 100);
-	}
+	};
 
 	render_angle(ctx, text = false, length = 25) {
 		let dirX = Math.cos(ToRadians(this.angle)) * length;
@@ -401,19 +478,19 @@ Source2D.Shape = class {
 			ctx.fillStyle = "white";
 			ctx.fillText(this.angle + " Deg", this.x, this.y);
 		}
-	}
+	};
 }
 
 Source2D.ShapeBox = class extends Source2D.Shape {
-	constructor (x, y, width, height, angle = 0, pivot = ["center", "center"]) {
-		super(x, y, [], width, height);
+	constructor (pos, width, height, angle = 0, pivot = new Source2D.Vector("center", "center")) {
+		super(pos, [], width, height, angle, pivot);
 		
 		this.polygon = [
-			[0, 0],
-			[1, 0],
-			[1, 1],
-			[0, 1],
-			[0, 0]
+			new Source2D.Vector(0, 0),
+			new Source2D.Vector(1, 0),
+			new Source2D.Vector(1, 1),
+			new Source2D.Vector(0, 1),
+			new Source2D.Vector(0, 0)
 		];
 		this.angle = angle;
 		this.pivot = pivot;
@@ -422,25 +499,34 @@ Source2D.ShapeBox = class extends Source2D.Shape {
 	render (ctx, text = true, renderAngle = true, angleText = true, length = 25) {
 
 		// I SOMEHOW MANAGED TO FIX THIS AFTER ADDING PIVOTS
-		let translateX = -this.Pivot()[0];
-		let translateY = -this.Pivot()[1];
+		let translateX = -this.Pivot().x;
+		let translateY = -this.Pivot().y;
 
-		let pivotX = this.x + this.Pivot()[0];
-		let pivotY = this.y + this.Pivot()[1];
+		let pivotX = this.x - this.Pivot().x;
+		let pivotY = this.y - this.Pivot().y;
 
-		let x = pivotX + translateX;
-		let y = pivotY + translateY;
+		let x = pivotX - translateX;
+		let y = pivotY - translateY;
 
 		// ctx.strokeStyle = "blue";
 		// ctx.strokeRect(x, y, 1, 1);
 
 		ctx.strokeStyle = "white";
+		ctx.fillStyle = "rgba(0,0,255,0.25)";
 		ctx.save();
 
 		ctx.translate(x, y);
 		ctx.rotate(ToRadians(this.angle));
 
+		ctx.fillRect(translateX, translateY, this.width, this.height);
 		ctx.strokeRect(translateX, translateY, this.width, this.height);
+
+		ctx.beginPath();
+		ctx.moveTo(translateX, translateY);
+		ctx.lineTo(translateX + this.width, translateY + this.height);
+		ctx.closePath();
+
+		ctx.stroke();
 
 		ctx.restore();
 
@@ -503,11 +589,11 @@ Source2D.Object = class {
 
 	renderSprite (ctx) {
 		
-		let translateX = -this.shape.Pivot()[0];
-		let translateY = -this.shape.Pivot()[1];
+		let translateX = -this.shape.Pivot().x;
+		let translateY = -this.shape.Pivot().y;
 
-		let pivotX = this.x + this.shape.Pivot()[0];
-		let pivotY = this.y + this.shape.Pivot()[1];
+		let pivotX = this.x + this.shape.Pivot().x;
+		let pivotY = this.y + this.shape.Pivot().y;
 
 		let x = pivotX + translateX;
 		let y = pivotY + translateY;

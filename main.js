@@ -28,28 +28,23 @@ let load = function () {
 			], 12, true, false)
 	};
 	
-	layout.addLayer(0, "main");
-	layout.getLayer("main").objects.push(
-		new Source2D.Object(
-			sprites.controls,
-			new Source2D.ShapeBox(300, 50, 157, 104, 0, ["center", "center"])
-		)
-	);
-	layout.getLayer("main").objects.push( new Rectangle(10, 10, 50, 50) );
+	let layer = layout.addLayer(0, "main");
+	let obj = new Source2D.Object(
+		sprites.controls,
+		new Source2D.ShapeBox(new Source2D.Vector(300, 50), 157, 104, 0, new Source2D.Vector("center", "center"))
+	)
 
-	layout.getLayer("main").objects[0].update = function () {
+	layer.objects.push(obj);
+
+	layer.objects.push( new Rectangle(10, 10, 50, 50) );
+
+	layer.objects[0].update = function () {
 
 		let sin = Math.sin,
 			now = performance.now();
 		
 		// Sprite
 		this.spr.update();
-
-		// Physics
-		this.shape.applyGravity(0, 0.25);
-		this.shape.applyVelocity();
-
-		if (this.y >= 400) this.shape.vel.y = -13.5;
 
 		// Angle
 		this.angle = sin( now / 1000 ) * 10;
@@ -78,9 +73,9 @@ let CreateCirclePolygon = function (radius) {
 // ==================================
 
 let Rectangle = class extends Source2D.Object {
-	constructor (x, y, width, height, angle = 0, pivot = ["center", "center"]) {
+	constructor (x, y, width, height, angle = 0, pivot = new Source2D.Vector("center", "center")) {
 		super();
-		this.shape = new Source2D.ShapeBox(x, y, width, height, angle, pivot);
+		this.shape = new Source2D.ShapeBox(new Source2D.Vector(x, y), width, height, angle, pivot);
 	}
 	
 	update () {
@@ -134,21 +129,6 @@ let Rectangle = class extends Source2D.Object {
 	}
 }
 
-let Circle = class extends Source2D.Object {
-	constructor (x, y, radius = 0, angle = 0, pivot = ["center", "center"]) {
-		super();
-		this.shape = new Source2D.Shape(x, y, CreateCirclePolygon(radius), angle, pivot);
-	}
-	
-	update () {
-		// this.shape.width = Math.sin(Date.now());
-	}
-
-	render (ctx) {
-		this.shape.render(ctx);
-	}
-}
-
 // ==================================
 
 let assets = {};
@@ -174,6 +154,8 @@ let update = function () {
 }
 
 let render = function () {
+	ctx.fillStyle = "black";
+	ctx.fillRect(0, 0, canvas.width, canvas.height);
 	if (!assets.isLoaded) {	
 		ctx.fillStyle = "black";
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
